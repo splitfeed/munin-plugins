@@ -1,0 +1,74 @@
+#!/bin/bash
+#
+#
+# Parameters understood:
+#
+#       config   (required)
+#       autoconf (optional - used by munin-config)
+#
+
+#%# family=auto
+#%# capabilities=autoconf
+
+LOG=/var/www/memory.log
+
+if [ "$1" = "autoconf" ]; then
+	if [ -r "$LOG" ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 1
+	fi
+
+fi
+
+
+if [ "$1" = "config" ]; then
+	echo "graph_args --base 1024 -r --lower-limit 0"
+	echo "graph_title Peak PHP memory usage"
+	echo "graph_category php"
+	echo "graph_info Peak PHP memory usage per VirtualHost (or server name really)"
+	echo "graph_vlabel bytes"
+	echo "graph_scale yes"
+	echo "graph_period second"
+
+	awk -F ' - ' '
+	{
+		if (substr($3,0,4) == "www.") {
+			$3 = substr($3,5);
+		}
+		if ($2 > list[$3]) {
+			list[$3]=$2
+		}
+	} END {
+		for (i in list) {
+			gsub(/[-.]/,"_", i);
+			
+			print i".label",i
+			print i".type GAUGE"
+			print i".draw LINE1"
+		}
+	}
+
+	' $LOG
+fi
+
+awk -F ' - ' '
+{
+	if (substr($3,0,4) == "www.") {
+		$3 = substr($3,5);
+	}
+	if ($2 > list[$3]) {
+		list[$3]=$2
+	}
+} END {
+	for (i in list) {
+		v = list[i]
+		gsub(/[-.]/,"_", i);
+		
+		print i".value",v
+	}
+}
+
+' $LOG
