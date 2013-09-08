@@ -121,8 +121,8 @@ if ($graph eq "traffic") {
 	my $res = $client->call( $uri, $obj ) || die $! . " $uri\n";
 
 
-	printf("up.value %d\n", $res->content->{'arguments'}->{'cumulative-stats'}->{'uploadedBytes'});
-	printf("down.value %d\n", $res->content->{'arguments'}->{'cumulative-stats'}->{'downloadedBytes'});
+	printf("up.value %d\n", $res->content->{'arguments'}->{'current-stats'}->{'uploadedBytes'});
+	printf("down.value %d\n", $res->content->{'arguments'}->{'current-stats'}->{'downloadedBytes'});
 
 # Get torrent states
 } elsif ($graph eq "status") {
@@ -139,7 +139,7 @@ if ($graph eq "traffic") {
 		$state_counts{$torrent->{status}}++;
 	}
 
-	my %states = ('waiting' => 1, 'checking' => 2, 'downloading' => 4, 'seeding' => 8, 'stopped' => 16);
+	my %states = ('waiting' => 3, 'checking' => 2, 'downloading' => 4, 'seeding' => 6, 'stopped' => 0);
 	while ((my $label, my $status) = each %states) {
 		print "$label.value ",$state_counts{$status} || 0,"\n";
 	}
